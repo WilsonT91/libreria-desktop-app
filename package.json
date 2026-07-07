@@ -1,0 +1,15 @@
+{
+  "name": "libreria-app",
+  "version": "1.0.0",
+  "description": "Sistema de gestión para librería",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "author": "Wilson Terrones",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "electron": "^43.0.0"
+  }
+}
