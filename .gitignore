@@ -6,3 +6,4 @@ out
 *.log*
 .env
 RECUPERACION-EMERGENCIA.md
+*.db
