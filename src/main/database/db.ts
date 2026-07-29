@@ -1,11 +1,13 @@
-const path = require('path');
-const Database = require('better-sqlite3');
+import path from 'path'
+import { app } from 'electron'
+import Database from 'better-sqlite3'
 
-const dbPath = path.join(__dirname, 'libreria.db');
-const db = new Database(dbPath);
+const dbPath = path.join(app.getPath('userData'), 'libreria.db')
+//console.log('Ruta real de la base de datos:', dbPath)
+const db: Database.Database = new Database(dbPath)
 
 // Activa el soporte real de claves foraneas (SQLite lo trae desactivado por defecto)
-db.pragma('foreign_keys = ON');
+db.pragma('foreign_keys = ON')
 
 db.exec(`
   -- ROLES: catalogo de roles del sistema, gestionable sin tocar codigo
@@ -27,14 +29,14 @@ db.exec(`
     password_hash TEXT NOT NULL,
     rol_id INTEGER NOT NULL REFERENCES Roles(id),
     estado INTEGER NOT NULL DEFAULT 1,
--- Modulo de autenticacion / recuperacion de acceso
+
     primer_inicio INTEGER NOT NULL DEFAULT 1,
     codigo_recuperacion_hash TEXT,
     archivo_recuperacion_hash TEXT,
     intentos_fallidos INTEGER NOT NULL DEFAULT 0,
--- Auditoria
-    actualizado_por INTEGER REFERENCES Usuarios(id),
-    fecha_actualizacion TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+
+    userupd INTEGER REFERENCES Usuarios(id),
+    fecupd TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
 
   -- CATEGORIAS: catalogo de categorias de producto
@@ -42,8 +44,8 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre TEXT NOT NULL UNIQUE,
     estado INTEGER NOT NULL DEFAULT 1,
-    actualizado_por INTEGER REFERENCES Usuarios(id),
-    fecha_actualizacion TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    userupd INTEGER REFERENCES Usuarios(id),
+    fecupd TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
 
   -- UNIDADES DE MEDIDA: catalogo compartido (unidad de venta y unidad de compra)
@@ -51,8 +53,8 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre TEXT NOT NULL UNIQUE,
     estado INTEGER NOT NULL DEFAULT 1,
-    actualizado_por INTEGER REFERENCES Usuarios(id),
-    fecha_actualizacion TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    userupd INTEGER REFERENCES Usuarios(id),
+    fecupd TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
 
   -- PRODUCTOS: catalogo unificado (reemplaza las tablas separadas de mayor/menor del Excel)
@@ -71,8 +73,8 @@ db.exec(`
     stock_actual INTEGER NOT NULL DEFAULT 0,
     stock_minimo INTEGER NOT NULL DEFAULT 0,
     estado INTEGER NOT NULL DEFAULT 1,
-    actualizado_por INTEGER REFERENCES Usuarios(id),
-    fecha_actualizacion TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    userupd INTEGER REFERENCES Usuarios(id),
+    fecupd TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
 
   -- MOVIMIENTOS DE INVENTARIO: reemplaza la hoja HISTORIAL_PRODUCTOS del Excel
@@ -89,14 +91,12 @@ db.exec(`
     usuario_id INTEGER NOT NULL REFERENCES Usuarios(id),
     fecha TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
-`);
+`)
 
 // Datos iniciales: los 3 roles del sistema (estructura tecnica, no dato de negocio)
-const insertarRol = db.prepare('INSERT OR IGNORE INTO Roles (nombre, descripcion) VALUES (?, ?)');
-insertarRol.run('administrador', 'Acceso total al sistema');
-insertarRol.run('supervisor', 'Gestion de productos, precios y reportes');
-insertarRol.run('cajero', 'Solo modulo de ventas');
+const insertarRol = db.prepare('INSERT OR IGNORE INTO Roles (nombre, descripcion) VALUES (?, ?)')
+insertarRol.run('administrador', 'Acceso total al sistema')
+insertarRol.run('supervisor', 'Gestion de productos, precios y reportes')
+insertarRol.run('cajero', 'Solo modulo de ventas')
 
-console.log('Base de datos y tablas listas: Roles, Usuarios, Categorias, UnidadesMedida, Productos, MovimientosInventario.');
-
-module.exports = db;
+export default db
